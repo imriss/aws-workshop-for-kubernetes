@@ -41,8 +41,6 @@ spec:
           mountPath: /mnt/config-map
       - name: clone-mysql
         image: nakisa/mysql:percona-server-8.0
-#        image: percona/percona-server:8.0
-#        image: gcr.io/google-samples/xtrabackup:1.0
         imagePullPolicy: Always
         command:
         - bash
@@ -56,9 +54,11 @@ spec:
           ordinal=${BASH_REMATCH[1]}
           [[ $ordinal -eq 0 ]] && exit 0
           # Clone data from previous peer.
-          touch /var/lib/mysql/xtrabackup_checkpoints
+          # greenfield (Reza)
+          rm -rf /var/lib/mysql
+          sleep 1
           ncat --recv-only mysql-$(($ordinal-1)).mysql 3307 | xbstream -x -C /var/lib/mysql
-          touch /var/lib/mysql/xtrabackup_checkpoints
+          sleep 1
           # Prepare the backup.
           xtrabackup --prepare --target-dir=/var/lib/mysql
         volumeMounts:
@@ -103,8 +103,6 @@ spec:
           timeoutSeconds: 1
       - name: xtrabackup
         image: nakisa/mysql:percona-server-8.0
-#        image: percona/percona-server:8.0
-#        image: gcr.io/google-samples/xtrabackup:1.0
         imagePullPolicy: Always
         ports:
         - name: xtrabackup
